@@ -7,7 +7,7 @@ add_definitions(-DBOOST_TEST_DYN_LINK)
 include_directories("${PROJECT_SOURCE_DIR}/src")
 include_directories(${Boost_INCLUDE_DIRS})
 
-set(HEADERS XYZarm.h XYZSarm.h Tree30Dof.h SSSarm.h)
+set(HEADERS XXXarm.h XYZarm.h XYZSarm.h Tree30Dof.h SSSarm.h)
 
 macro(addUnitTest name)
   if(${UNIT_TESTS})
@@ -35,6 +35,7 @@ addUnitTest("DynamicsTest")
 addUnitTest("CoMTest")
 addUnitTest("MomentumTest")
 addUnitTest("IDIMTest")
+addUnitTest("InverseStaticsTest")
 
 addBenchmark("JacobianBench")
 addBenchmark("DynamicsBench")
