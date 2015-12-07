@@ -20,7 +20,6 @@
 #include <iostream>
 
 // boost
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE Statics
 #include <boost/test/unit_test.hpp>
 #include <boost/math/constants/constants.hpp>
@@ -64,14 +63,15 @@ BOOST_AUTO_TEST_CASE(XXXArmTorqueJacobian)
     forwardKinematics(mb, mbc);
     forwardVelocity(mb, mbc);
     IS.inverseStatics(mb, mbc);
-    IS.computeTorqueJacobiansFD(mb, mbc, 1e-10);
+    IS.computeTorqueJacobianFD(mb, mbc, 1e-10);
 
     (*output) << "========================================" << std::endl;
-    (*output) << "Results for mbc.q = " << mbc.q << std::endl;
-    (*output) << "mbc.jointTorque = \n" << mbc.jointTorque << std::endl;
+    (*output) << "Results for mbc.q =" << mbc.q << std::endl;
+    (*output) << "mbc.jointTorque =\n" << mbc.jointTorque << std::endl;
     for (auto e: IS.f())
-      (*output) << "IS.f().vector = \n" << e.vector() << std::endl;
-    (*output) << "mbc.jointTorqueJacQ = \n" << mbc.jointTorqueJacQ << std::endl;
+      (*output) << "IS.f().vector =\n" << e.vector() << std::endl;
+    (*output) << "IS.jointTorqueJacQ() =\n" << IS.jointTorqueJacQ() << std::endl;
+    (*output) << "IS.jointTorqueJacF() =\n" << IS.jointTorqueJacF() << std::endl;
   }
   {
     mbc.q[1][0] = M_PI;
@@ -80,14 +80,15 @@ BOOST_AUTO_TEST_CASE(XXXArmTorqueJacobian)
     forwardKinematics(mb, mbc);
     forwardVelocity(mb, mbc);
     IS.inverseStatics(mb, mbc);
-    IS.computeTorqueJacobiansFD(mb, mbc, 1e-10);
+    IS.computeTorqueJacobianFD(mb, mbc, 1e-10);
 
     (*output) << "========================================" << std::endl;
-    (*output) << "Results for mbc.q = " << mbc.q << std::endl;
-    (*output) << "mbc.jointTorque = \n" << mbc.jointTorque << std::endl;
+    (*output) << "Results for mbc.q =" << mbc.q << std::endl;
+    (*output) << "mbc.jointTorque =\n" << mbc.jointTorque << std::endl;
     for (auto e: IS.f())
-      (*output) << "IS.f().vector = \n" << e.vector() << std::endl;
-    (*output) << "mbc.jointTorqueJacQ = \n" << mbc.jointTorqueJacQ << std::endl;
+      (*output) << "IS.f().vector =\n" << e.vector() << std::endl;
+    (*output) << "IS.jointTorqueJacQ() =\n" << IS.jointTorqueJacQ() << std::endl;
+    (*output) << "IS.jointTorqueJacF() =\n" << IS.jointTorqueJacF() << std::endl;
   }
   {
     mbc.q[1][0] = M_PI;
@@ -96,14 +97,15 @@ BOOST_AUTO_TEST_CASE(XXXArmTorqueJacobian)
     forwardKinematics(mb, mbc);
     forwardVelocity(mb, mbc);
     IS.inverseStatics(mb, mbc);
-    IS.computeTorqueJacobiansFD(mb, mbc, 1e-10);
+    IS.computeTorqueJacobianFD(mb, mbc, 1e-10);
 
     (*output) << "========================================" << std::endl;
-    (*output) << "Results for mbc.q = " << mbc.q << std::endl;
-    (*output) << "mbc.jointTorque = \n" << mbc.jointTorque << std::endl;
+    (*output) << "Results for mbc.q =" << mbc.q << std::endl;
+    (*output) << "mbc.jointTorque =\n" << mbc.jointTorque << std::endl;
     for (auto e: IS.f())
-      (*output) << "IS.f().vector = \n" << e.vector() << std::endl;
-    (*output) << "mbc.jointTorqueJacQ = \n" << mbc.jointTorqueJacQ << std::endl;
+      (*output) << "IS.f().vector =\n" << e.vector() << std::endl;
+    (*output) << "IS.jointTorqueJacQ() =\n" << IS.jointTorqueJacQ() << std::endl;
+    (*output) << "IS.jointTorqueJacF() =\n" << IS.jointTorqueJacF() << std::endl;
   }
   {
     mbc.q[1][0] = 0.4;
@@ -112,18 +114,20 @@ BOOST_AUTO_TEST_CASE(XXXArmTorqueJacobian)
     forwardKinematics(mb, mbc);
     forwardVelocity(mb, mbc);
     IS.inverseStatics(mb, mbc);
-    IS.computeTorqueJacobiansFD(mb, mbc, 1e-10);
+    IS.computeTorqueJacobianFD(mb, mbc, 1e-10);
 
     (*output) << "========================================" << std::endl;
-    (*output) << "Results for mbc.q = " << mbc.q << std::endl;
-    (*output) << "mbc.jointTorque = \n" << mbc.jointTorque << std::endl;
+    (*output) << "Results for mbc.q =" << mbc.q << std::endl;
+    (*output) << "mbc.jointTorque =\n" << mbc.jointTorque << std::endl;
     for (auto e: IS.f())
-      (*output) << "IS.f().vector = \n" << e.vector() << std::endl;
-    (*output) << "mbc.jointTorqueJacQ = \n" << mbc.jointTorqueJacQ << std::endl;
+      (*output) << "IS.f().vector =\n" << e.vector() << std::endl;
+    (*output) << "IS.jointTorqueJacQ() =\n" << IS.jointTorqueJacQ() << std::endl;
+    (*output) << "IS.jointTorqueJacF() =\n" << IS.jointTorqueJacF() << std::endl;
   }
 
   std::cout << output->str() << std::endl;
   BOOST_CHECK(output->match_pattern());
+} // end of namespace rbd
+
 }
 
-} // end of namespace rbd

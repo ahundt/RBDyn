@@ -55,7 +55,7 @@ public:
     * and gravity.
 		* Fills jointTorqueJacQ and jointTorqueJacF.
 		*/
-	void computeTorqueJacobians(const MultiBody& mb, MultiBodyConfig& mbc);
+	void computeTorqueJacobian(const MultiBody& mb, MultiBodyConfig& mbc);
 
 	/**
 		* Compute the derivatives of the torques calculated by the inverse statics
@@ -65,7 +65,7 @@ public:
     * and gravity.
 		* Fills jointTorqueJacQ and jointTorqueJacF.
 		*/
-	void computeTorqueJacobiansFD(const MultiBody& mb, MultiBodyConfig& mbc, double delta = 1e-8);
+	void computeTorqueJacobianFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
 
 	// safe version for python binding
 
@@ -79,13 +79,36 @@ public:
 		* @return vector of forces transmitted from body λ(i) to body i across
 		* joint i.
 		*/
-	const std::vector<sva::ForceVecd>& f() const;
+	const std::vector<sva::ForceVecd>& f() const{return f_;};
+
+  /**
+    * @brief Get Jacobian of the joint torque w.r.t q
+    */
+  const std::vector<std::vector<std::vector<double>>>& jointTorqueJacQ() const
+  {
+    return jointTorqueJacQ_;
+  };
+
+  /**
+    * @brief Get Jacobian of the joint torque w.r.t external forces
+    */
+  const std::vector<std::vector<std::vector<double>>>& jointTorqueJacF() const
+  {
+    return jointTorqueJacF_;
+  };
+
 
 private:
 	/// @brief Internal forces.
 	/// f_ is the vector of forces transmitted from body λ(i) to body i across
 	/// joint i.
 	std::vector<sva::ForceVecd> f_;
+
+  /// Jacobian of the joint torque w.r.t q
+	std::vector<std::vector<std::vector<double>>> jointTorqueJacQ_;
+
+  /// Jacobian of the joint torque w.r.t forces
+	std::vector<std::vector<std::vector<double>>> jointTorqueJacF_;
 };
 
 } // namespace rbd
