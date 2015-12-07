@@ -63,6 +63,12 @@ struct MultiBodyConfig
 	/// Joints torque.
 	std::vector<std::vector<double>> jointTorque;
 
+  /// Jacobian of the joint torque w.r.t q
+	std::vector<std::vector<std::vector<double>>> jointTorqueJacQ;
+
+  /// Jacobian of the joint torque w.r.t forces
+	std::vector<std::vector<std::vector<double>>> jointTorqueJacF;
+
 
 
 	/// Motion subspace (Xj.j.subspace).

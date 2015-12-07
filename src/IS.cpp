@@ -21,6 +21,8 @@
 // RBDyn
 #include "MultiBody.h"
 #include "MultiBodyConfig.h"
+#include "FK.h"
+#include "FV.h"
 
 namespace rbd
 {
@@ -67,25 +69,47 @@ void InverseStatics::inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)
 		}
 	}
 
-  std::cout << "mb.bodies().size() = \n" << mb.bodies().size() << std::endl;
-  std::cout << "mb.joints().size() = \n" << mb.joints().size() << std::endl;
-  std::cout << "mb.predecessors().size() = \n" << mb.predecessors().size() << std::endl;
+  //std::cout << "mb.bodies().size() = \n" << mb.bodies().size() << std::endl;
+  //std::cout << "mb.joints().size() = \n" << mb.joints().size() << std::endl;
+  //std::cout << "mb.predecessors().size() = \n" << mb.predecessors().size() << std::endl;
 
-  for (size_t i = 0; i < mbc.q.size(); ++i)
-    for (size_t j = 0; j < mbc.q[i].size(); ++j)
-      std::cout << "mbc.q[" << i << "][" << j << "]: " << mbc.q[i][j] << std::endl;
+  //for (size_t i = 0; i < mbc.q.size(); ++i)
+    //for (size_t j = 0; j < mbc.q[i].size(); ++j)
+      //std::cout << "mbc.q[" << i << "][" << j << "]: " << mbc.q[i][j] << std::endl;
 
-  std::cout << "a_0 = \n" << a_0 << std::endl;
-  for (size_t i = 0; i < mbc.force.size(); ++i)
-    std::cout << "force[" << i << "]: " << mbc.force[i] << std::endl;
-  for (size_t i = 0; i < f_.size(); ++i)
-    std::cout << "f_[" << i << "]: " << f_[i] << std::endl;
-  for (size_t i = 0; i < mbc.jointTorque.size(); ++i)
-    for (size_t j = 0; j < mbc.jointTorque[i].size(); ++j)
-      std::cout << "torque[" << i << "][" << j << "]:" << mbc.jointTorque[i][j] << std::endl;
-
+  //std::cout << "a_0 = \n" << a_0 << std::endl;
+  //for (size_t i = 0; i < mbc.force.size(); ++i)
+    //std::cout << "force[" << i << "]: " << mbc.force[i] << std::endl;
+  //for (size_t i = 0; i < f_.size(); ++i)
+    //std::cout << "f_[" << i << "]: " << f_[i] << std::endl;
+  //for (size_t i = 0; i < mbc.jointTorque.size(); ++i)
+    //for (size_t j = 0; j < mbc.jointTorque[i].size(); ++j)
+      //std::cout << "torque[" << i << "][" << j << "]:" << mbc.jointTorque[i][j] << std::endl;
 }
 
+void InverseStatics::computeTorqueJacobians(const MultiBody& mb, MultiBodyConfig& mbc)
+{
+}
+
+void InverseStatics::computeTorqueJacobiansFD(const MultiBody& mb, MultiBodyConfig& mbc, double delta)
+{
+  MultiBodyConfig mbcCopy(mbc);
+
+  size_t index = 0;
+  for (size_t i = 0; i < mbc.q.size(); ++i)
+    for (size_t j = 0; j < mbc.q[i].size(); ++j)
+    {
+      mbcCopy.q[i][j] += delta;
+      forwardKinematics(mb, mbcCopy);
+      forwardVelocity(mb, mbcCopy);
+      inverseStatics(mb, mbcCopy);
+      for (size_t k = 0; k < mbc.jointTorque.size(); ++k)
+        for (size_t l = 0; l < mbc.jointTorque[k].size(); ++l)
+          mbc.jointTorqueJacQ[k][l][index] = (mbcCopy.jointTorque[k][l]-mbc.jointTorque[k][l])/delta;
+      mbcCopy.q[i][j] -= delta;
+      index++;
+    }
+}
 
 
 void InverseStatics::sInverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)

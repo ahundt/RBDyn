@@ -27,7 +27,7 @@
 #include "MultiBodyGraph.h"
 
 
-/// @return An simple XXX arm with Y as up axis.
+/// @return A simple XXX arm with Y as up axis.
 std::tuple<rbd::MultiBody, rbd::MultiBodyConfig, rbd::MultiBodyGraph>
 makeXXXarm(bool isFixed=true)
 {

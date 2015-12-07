@@ -43,9 +43,29 @@ public:
 		* @param mb MultiBody used has model.
 		* @param mbc Uses force, parentToSon, bodyPosW, parentToSon, motionSubspace
     * and gravity.
-		* Fill bodyAccB and jointTorque.
+		* Fills bodyAccB and jointTorque.
 		*/
 	void inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc);
+
+  /**
+		* Compute the derivatives of the torques calculated by the inverse statics
+    * w.r.t. q and forces.
+		* @param mb MultiBody used has model.
+		* @param mbc Uses force, parentToSon, bodyPosW, parentToSon, motionSubspace
+    * and gravity.
+		* Fills jointTorqueJacQ and jointTorqueJacF.
+		*/
+	void computeTorqueJacobians(const MultiBody& mb, MultiBodyConfig& mbc);
+
+	/**
+		* Compute the derivatives of the torques calculated by the inverse statics
+    * w.r.t. q and forces using Finite Differences.
+		* @param mb MultiBody used has model.
+		* @param mbc Uses force, parentToSon, bodyPosW, parentToSon, motionSubspace
+    * and gravity.
+		* Fills jointTorqueJacQ and jointTorqueJacF.
+		*/
+	void computeTorqueJacobiansFD(const MultiBody& mb, MultiBodyConfig& mbc, double delta = 1e-8);
 
 	// safe version for python binding
 
