@@ -19,6 +19,7 @@
 
 // includes
 // RBDyn
+#include "util.hh"
 #include "MultiBody.h"
 #include "MultiBodyConfig.h"
 #include "FK.h"
