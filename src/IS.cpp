@@ -38,9 +38,15 @@ InverseStatics::InverseStatics(const MultiBody& mb):
 		jointTorqueJacQ_[i].resize(mb.joint(i).dof());
 		jointTorqueJacF_[i].resize(mb.joint(i).dof());
     for (size_t j = 0; j < jointTorqueJacQ_[i].size(); ++j)
+    {
       jointTorqueJacQ_[i][j].resize(mb.nrDof());
+      std::fill(jointTorqueJacQ_[i][j].begin(), jointTorqueJacQ_[i][j].end(), 0);
+    }
     for (size_t j = 0; j < jointTorqueJacF_[i].size(); ++j)
+    {
       jointTorqueJacF_[i][j].resize(mb.nrBodies()*6);
+      std::fill(jointTorqueJacF_[i][j].begin(), jointTorqueJacF_[i][j].end(), 0);
+    }
   }
 }
 
