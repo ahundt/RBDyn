@@ -91,6 +91,7 @@ void InverseStatics::inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)
 void InverseStatics::computeTorqueJacobian(const MultiBody& /*mb*/,
                                             MultiBodyConfig& /*mbc*/)
 {
+  std::cerr << "InverseStatics::computeTorqueJacobian is not implemented yet" << std::endl;
 }
 
 void InverseStatics::computeTorqueJacobianFD(const MultiBody& mb,
