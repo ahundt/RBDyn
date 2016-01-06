@@ -68,11 +68,11 @@ makeXXXarm(bool isFixed=true)
 	//  Base    RevX   RevX    RevX
 
 
-	PTransformd to(Vector3d(0., 0.5, 0.));
-	PTransformd from(Vector3d(0., -0.5, 0.));
+	PTransformd to(Vector3d(0., 1., 0.));
+	PTransformd from(Vector3d(0., 0., 0.));
 
 
-	mbg.linkBodies(0, to, 1, from, 0);
+	mbg.linkBodies(0, from, 1, from, 0);
 	mbg.linkBodies(1, to, 2, from, 1);
 	mbg.linkBodies(2, to, 3, from, 2);
 

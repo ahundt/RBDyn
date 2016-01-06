@@ -60,12 +60,15 @@ public:
 	/**
 		* Compute the derivatives of the torques calculated by the inverse statics
     * w.r.t. q and forces using Finite Differences.
+    * WARNING: This computes the derivative of the torques w.r.t some fictitious forces applied on each body at the point (0,0,0) of the reference frame.
 		* @param mb MultiBody used has model.
 		* @param mbc Uses force, parentToSon, bodyPosW, parentToSon, motionSubspace
     * and gravity.
 		* Fills jointTorqueJacQ and jointTorqueJacF.
 		*/
 	void computeTorqueJacobianFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
+	void computeTorqueJacobianJointFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
+	void computeTorqueJacobianForceFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
 
 	// safe version for python binding
 

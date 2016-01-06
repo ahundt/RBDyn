@@ -33,7 +33,7 @@ namespace rbd
 
     for (; it != vect.end (); ++it)
       o << ", " << *it;
-    o << "] ";
+    o << "]";
     return o;
   }
 

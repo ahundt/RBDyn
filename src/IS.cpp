@@ -98,6 +98,14 @@ void InverseStatics::computeTorqueJacobianFD(const MultiBody& mb,
                                               const MultiBodyConfig& mbc,
                                               double delta)
 {
+  computeTorqueJacobianJointFD(mb, mbc, delta);
+  computeTorqueJacobianForceFD(mb, mbc, delta);
+}
+
+void InverseStatics::computeTorqueJacobianJointFD(const MultiBody& mb,
+                                              const MultiBodyConfig& mbc,
+                                              double delta)
+{
   MultiBodyConfig mbcCopy(mbc);
 
   size_t index = 0;
@@ -119,11 +127,29 @@ void InverseStatics::computeTorqueJacobianFD(const MultiBody& mb,
   //restore original value
   forwardKinematics(mb, mbcCopy);
   forwardVelocity(mb, mbcCopy);
+  inverseStatics(mb, mbcCopy);
+}
+
+void InverseStatics::computeTorqueJacobianForceFD(const MultiBody& mb,
+                                              const MultiBodyConfig& mbc,
+                                              double delta)
+{
+  MultiBodyConfig mbcCopy(mbc);
 
   //Differentiate wrt force
-  index = 0;
+  size_t index = 0;
   for (size_t i = 0; i < mbc.force.size(); ++i)
   {
+    for (size_t j = 0; j < 3; ++j)
+    {
+      mbcCopy.force[i].couple()[j] += delta;
+      inverseStatics(mb, mbcCopy);
+      for (size_t k = 0; k < mbc.jointTorque.size(); ++k)
+        for (size_t l = 0; l < mbc.jointTorque[k].size(); ++l)
+          jointTorqueJacF_[k][l][index] = (mbcCopy.jointTorque[k][l]-mbc.jointTorque[k][l])/delta;
+      mbcCopy.force[i].couple()[j] -= delta;
+      index++;
+    }
     for (size_t j = 0; j < 3; ++j)
     {
       mbcCopy.force[i].force()[j] += delta;
@@ -135,16 +161,6 @@ void InverseStatics::computeTorqueJacobianFD(const MultiBody& mb,
           jointTorqueJacF_[k][l][index] = res;
         }
       mbcCopy.force[i].force()[j] -= delta;
-      index++;
-    }
-    for (size_t j = 0; j < 3; ++j)
-    {
-      mbcCopy.force[i].couple()[j] += delta;
-      inverseStatics(mb, mbcCopy);
-      for (size_t k = 0; k < mbc.jointTorque.size(); ++k)
-        for (size_t l = 0; l < mbc.jointTorque[k].size(); ++l)
-          jointTorqueJacF_[k][l][index] = (mbcCopy.jointTorque[k][l]-mbc.jointTorque[k][l])/delta;
-      mbcCopy.force[i].couple()[j] -= delta;
       index++;
     }
   }

@@ -45,13 +45,36 @@
 
 namespace rbd
 {
+using namespace Eigen;
+Eigen::IOFormat cleanFmt(2, 0, ", ", "\n", "[", "]");
+void jointTorqueJac2Eigen(
+    std::vector<std::vector<std::vector<double>>> vecvecvec,
+    Eigen::Ref<Eigen::MatrixXd> out)
+{
+  int r = 0;
+  for (auto joint : vecvecvec)
+    for (auto dim : joint)
+    {
+      int c = 0;
+      for (auto var : dim)
+      {
+        out(r, c) = var;
+        c++;
+      }
+      r++;
+    }
+}
+
 void test(boost::shared_ptr<boost::test_tools::output_test_stream> output,
           rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
-          rbd::InverseStatics& IS, double q1, double q2, double q3)
+          rbd::InverseStatics& IS, Eigen::Vector3d q)
 {
-  mbc.q[1][0] = q1;
-  mbc.q[2][0] = q2;
-  mbc.q[3][0] = q3;
+  Eigen::MatrixXd jacQ(3,3);
+  Eigen::MatrixXd jacF(3,24);
+  (*output) << "\n\n\nChange config to " << q.transpose() << std::endl;
+  mbc.q[1][0] = q(0);
+  mbc.q[2][0] = q(1);
+  mbc.q[3][0] = q(2);
   forwardKinematics(mb, mbc);
   forwardVelocity(mb, mbc);
   IS.inverseStatics(mb, mbc);
@@ -62,8 +85,10 @@ void test(boost::shared_ptr<boost::test_tools::output_test_stream> output,
   (*output) << "mbc.jointTorque =\n" << mbc.jointTorque << std::endl;
   for (auto e : IS.f())
     (*output) << "IS.f().vector =\n" << e.vector() << std::endl;
-  (*output) << "IS.jointTorqueJacQ() =\n" << IS.jointTorqueJacQ() << std::endl;
-  (*output) << "IS.jointTorqueJacF() =\n" << IS.jointTorqueJacF() << std::endl;
+  jointTorqueJac2Eigen(IS.jointTorqueJacQ(), jacQ);
+  jointTorqueJac2Eigen(IS.jointTorqueJacF(), jacF);
+  (*output) << "IS.jointTorqueJacQ() =\n" << jacQ.format(cleanFmt) << std::endl;
+  (*output) << "IS.jointTorqueJacF() =\n" << jacF.format(cleanFmt) << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE(XXXArmTorqueJacobian)
@@ -77,10 +102,10 @@ BOOST_AUTO_TEST_CASE(XXXArmTorqueJacobian)
   std::tie(mb, mbc, mbg) = makeXXXarm();
   rbd::InverseStatics IS(mb);
 
-  test(output, mb, mbc, IS, 0, 0, 0);
-  test(output, mb, mbc, IS, M_PI, 0, 0);
-  test(output, mb, mbc, IS, M_PI, M_PI / 2, 0);
-  test(output, mb, mbc, IS, 0.4, 0.1, 0.2);
+  test(output, mb, mbc, IS, Vector3d(0, 0, 0));
+  test(output, mb, mbc, IS, Vector3d(M_PI, 0, 0));
+  test(output, mb, mbc, IS, Vector3d(0, M_PI / 2, 0));
+  test(output, mb, mbc, IS, Vector3d(0.4, 0.1, 0.2));
 
   std::cout << output->str() << std::endl;
   BOOST_CHECK(output->match_pattern());
