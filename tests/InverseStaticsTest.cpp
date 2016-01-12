@@ -47,23 +47,6 @@ namespace rbd
 {
 using namespace Eigen;
 Eigen::IOFormat cleanFmt(2, 0, ", ", "\n", "[", "]");
-void jointTorqueJac2Eigen(
-    std::vector<std::vector<std::vector<double>>> vecvecvec,
-    Eigen::Ref<Eigen::MatrixXd> out)
-{
-  int r = 0;
-  for (auto joint : vecvecvec)
-    for (auto dim : joint)
-    {
-      int c = 0;
-      for (auto var : dim)
-      {
-        out(r, c) = var;
-        c++;
-      }
-      r++;
-    }
-}
 
 void test(boost::shared_ptr<boost::test_tools::output_test_stream> output,
           rbd::MultiBody& mb, rbd::MultiBodyConfig& mbc,
@@ -78,17 +61,12 @@ void test(boost::shared_ptr<boost::test_tools::output_test_stream> output,
   forwardKinematics(mb, mbc);
   forwardVelocity(mb, mbc);
   IS.inverseStatics(mb, mbc);
-  IS.computeTorqueJacobianFD(mb, mbc, 1e-10);
 
   (*output) << "========================================" << std::endl;
   (*output) << "Results for mbc.q =" << mbc.q << std::endl;
   (*output) << "mbc.jointTorque =\n" << mbc.jointTorque << std::endl;
   for (auto e : IS.f())
     (*output) << "IS.f().vector =\n" << e.vector() << std::endl;
-  jointTorqueJac2Eigen(IS.jointTorqueJacQ(), jacQ);
-  jointTorqueJac2Eigen(IS.jointTorqueJacF(), jacF);
-  (*output) << "IS.jointTorqueJacQ() =\n" << jacQ.format(cleanFmt) << std::endl;
-  (*output) << "IS.jointTorqueJacF() =\n" << jacF.format(cleanFmt) << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE(XXXArmTorqueJacobian)

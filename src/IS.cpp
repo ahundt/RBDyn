@@ -27,28 +27,7 @@
 
 namespace rbd
 {
-
-InverseStatics::InverseStatics(const MultiBody& mb):
-	f_(mb.nrBodies()),
-  jointTorqueJacQ_(mb.nrJoints()),
-  jointTorqueJacF_(mb.nrJoints())
-{
-	for(int i = 0; i < static_cast<int>(mb.nrJoints()); ++i)
-	{
-		jointTorqueJacQ_[i].resize(mb.joint(i).dof());
-		jointTorqueJacF_[i].resize(mb.joint(i).dof());
-    for (size_t j = 0; j < jointTorqueJacQ_[i].size(); ++j)
-    {
-      jointTorqueJacQ_[i][j].resize(mb.nrDof());
-      std::fill(jointTorqueJacQ_[i][j].begin(), jointTorqueJacQ_[i][j].end(), 0);
-    }
-    for (size_t j = 0; j < jointTorqueJacF_[i].size(); ++j)
-    {
-      jointTorqueJacF_[i][j].resize(mb.nrBodies()*6);
-      std::fill(jointTorqueJacF_[i][j].begin(), jointTorqueJacF_[i][j].end(), 0);
-    }
-  }
-}
+InverseStatics::InverseStatics(const MultiBody& mb) : f_(mb.nrBodies()) {}
 
 void InverseStatics::inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)
 {
@@ -94,80 +73,17 @@ void InverseStatics::computeTorqueJacobian(const MultiBody& /*mb*/,
   std::cerr << "InverseStatics::computeTorqueJacobian is not implemented yet" << std::endl;
 }
 
-void InverseStatics::computeTorqueJacobianFD(const MultiBody& mb,
-                                              const MultiBodyConfig& mbc,
-                                              double delta)
+void printMBC(const MultiBody& mb, const MultiBodyConfig& mbc)
 {
-  computeTorqueJacobianJointFD(mb, mbc, delta);
-  computeTorqueJacobianForceFD(mb, mbc, delta);
+  std::cout << "mb.bodies() = " << mb.bodies() << std::endl;
+  std::cout << "mb.joints() = " << mb.joints() << std::endl;
+  std::cout << "mb.predecessors() = " << mb.predecessors() << std::endl;
+  std::cout << "mbc.gravity = " << mbc.gravity << std::endl;
+  std::cout << "mbc.parentToSon = \n" << mbc.parentToSon << std::endl;
+  std::cout << "mbc.bodyPosW = \n" << mbc.bodyPosW << std::endl;
+  std::cout << "mbc.force = \n" << mbc.force << std::endl;
+  std::cout << "mbc.motionSubspace = \n" << mbc.motionSubspace << std::endl;
 }
-
-void InverseStatics::computeTorqueJacobianJointFD(const MultiBody& mb,
-                                              const MultiBodyConfig& mbc,
-                                              double delta)
-{
-  MultiBodyConfig mbcCopy(mbc);
-
-  size_t index = 0;
-  //Differentiate wrt q
-  for (size_t i = 0; i < mbc.q.size(); ++i)
-    for (size_t j = 0; j < mbc.q[i].size(); ++j)
-    {
-      mbcCopy.q[i][j] += delta;
-      forwardKinematics(mb, mbcCopy);
-      forwardVelocity(mb, mbcCopy);
-      inverseStatics(mb, mbcCopy);
-      for (size_t k = 0; k < mbc.jointTorque.size(); ++k)
-        for (size_t l = 0; l < mbc.jointTorque[k].size(); ++l)
-          jointTorqueJacQ_[k][l][index] = (mbcCopy.jointTorque[k][l]-mbc.jointTorque[k][l])/delta;
-      mbcCopy.q[i][j] -= delta;
-      index++;
-    }
-
-  //restore original value
-  forwardKinematics(mb, mbcCopy);
-  forwardVelocity(mb, mbcCopy);
-  inverseStatics(mb, mbcCopy);
-}
-
-void InverseStatics::computeTorqueJacobianForceFD(const MultiBody& mb,
-                                              const MultiBodyConfig& mbc,
-                                              double delta)
-{
-  MultiBodyConfig mbcCopy(mbc);
-
-  //Differentiate wrt force
-  size_t index = 0;
-  for (size_t i = 0; i < mbc.force.size(); ++i)
-  {
-    for (size_t j = 0; j < 3; ++j)
-    {
-      mbcCopy.force[i].force()[j] += delta;
-      inverseStatics(mb, mbcCopy);
-      for (size_t k = 0; k < mbc.jointTorque.size(); ++k)
-        for (size_t l = 0; l < mbc.jointTorque[k].size(); ++l)
-        {
-          double res = (mbcCopy.jointTorque[k][l]-mbc.jointTorque[k][l])/delta;
-          jointTorqueJacF_[k][l][index] = res;
-        }
-      mbcCopy.force[i].force()[j] -= delta;
-      index++;
-    }
-    for (size_t j = 0; j < 3; ++j)
-    {
-      mbcCopy.force[i].couple()[j] += delta;
-      inverseStatics(mb, mbcCopy);
-      for (size_t k = 0; k < mbc.jointTorque.size(); ++k)
-        for (size_t l = 0; l < mbc.jointTorque[k].size(); ++l)
-          jointTorqueJacF_[k][l][index] = (mbcCopy.jointTorque[k][l]-mbc.jointTorque[k][l])/delta;
-      mbcCopy.force[i].couple()[j] -= delta;
-      index++;
-    }
-  }
-  //restore original value
-  inverseStatics(mb, mbcCopy);
-}
-
 
 void InverseStatics::sInverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)
 {

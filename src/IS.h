@@ -48,6 +48,11 @@ public:
 	void inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc);
 
   /**
+    * NOTE: THIS CANNOT WORK PROPERLY. If a body is equipped with a force defined on a frame attached to a body,
+    * that force won't follow the body during the FD computation
+		* Compute the derivatives of the torques calculated by the inverse statics
+    * w.r.t. q and forces
+    * WARNING: This computes the derivative of the torques w.r.t some fictitious forces applied on each body at the point (0,0,0) of the reference frame.
 		* Compute the derivatives of the torques calculated by the inverse statics
     * w.r.t. q and forces.
 		* @param mb MultiBody used has model.
@@ -58,6 +63,8 @@ public:
 	void computeTorqueJacobian(const MultiBody& mb, MultiBodyConfig& mbc);
 
 	/**
+    * NOTE: THIS CANNOT WORK PROPERLY. If a body is equipped with a force defined on a frame attached to a body,
+    * that force won't follow the body during the FD computation
 		* Compute the derivatives of the torques calculated by the inverse statics
     * w.r.t. q and forces using Finite Differences.
     * WARNING: This computes the derivative of the torques w.r.t some fictitious forces applied on each body at the point (0,0,0) of the reference frame.
@@ -66,9 +73,9 @@ public:
     * and gravity.
 		* Fills jointTorqueJacQ and jointTorqueJacF.
 		*/
-	void computeTorqueJacobianFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
-	void computeTorqueJacobianJointFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
-	void computeTorqueJacobianForceFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
+	//void computeTorqueJacobianFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
+	//void computeTorqueJacobianJointFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
+	//void computeTorqueJacobianForceFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
 
 	// safe version for python binding
 
@@ -84,34 +91,11 @@ public:
 		*/
 	const std::vector<sva::ForceVecd>& f() const{return f_;};
 
-  /**
-    * @brief Get Jacobian of the joint torque w.r.t q
-    */
-  const std::vector<std::vector<std::vector<double>>>& jointTorqueJacQ() const
-  {
-    return jointTorqueJacQ_;
-  };
-
-  /**
-    * @brief Get Jacobian of the joint torque w.r.t external forces
-    */
-  const std::vector<std::vector<std::vector<double>>>& jointTorqueJacF() const
-  {
-    return jointTorqueJacF_;
-  };
-
-
 private:
 	/// @brief Internal forces.
 	/// f_ is the vector of forces transmitted from body λ(i) to body i across
 	/// joint i.
 	std::vector<sva::ForceVecd> f_;
-
-  /// Jacobian of the joint torque w.r.t q
-	std::vector<std::vector<std::vector<double>>> jointTorqueJacQ_;
-
-  /// Jacobian of the joint torque w.r.t forces
-	std::vector<std::vector<std::vector<double>>> jointTorqueJacF_;
 };
 
 } // namespace rbd
