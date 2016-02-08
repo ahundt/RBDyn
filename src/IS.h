@@ -38,14 +38,14 @@ public:
 	/// @param mb MultiBody associated with this algorithm.
 	InverseStatics(const MultiBody& mb);
 
-	/**
-		* Compute the inverse statics.
-		* @param mb MultiBody used has model.
-		* @param mbc Uses force, parentToSon, bodyPosW, parentToSon, motionSubspace
+        /**
+                * Compute the inverse statics.
+                * @param mb MultiBody used has model.
+                * @param mbc Uses force, parentToSon, bodyPosW, motionSubspace
     * and gravity.
-		* Fills bodyAccB and jointTorque.
-		*/
-	void inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc);
+                * Fills bodyAccB and jointTorque.
+                */
+        void inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc);
 
   /**
     * NOTE: THIS CANNOT WORK PROPERLY. If a body is equipped with a force defined on a frame attached to a body,
@@ -96,6 +96,8 @@ private:
 	/// f_ is the vector of forces transmitted from body λ(i) to body i across
 	/// joint i.
 	std::vector<sva::ForceVecd> f_;
+        std::vector<Eigen::MatrixXd> df_;
+        std::vector<std::vector<Eigen::VectorXd>> jointTorqueDiff_;
 };
 
 } // namespace rbd
