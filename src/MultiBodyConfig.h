@@ -49,10 +49,8 @@ struct MultiBodyConfig
 
 
 
-	/// External force acting on each body in world coordinate.
+	/// Total External force acting on each body in world coordinate.
 	std::vector<sva::ForceVecd> force;
-
-
 
 	/// Joints configuration (Xj).
 	std::vector<sva::PTransformd> jointConfig;

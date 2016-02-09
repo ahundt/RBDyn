@@ -27,6 +27,13 @@ namespace rbd
 class MultiBody;
 struct MultiBodyConfig;
 
+struct ForceWithApplicationPoint
+{
+  public:
+    sva::ForceVecd force;
+    Eigen::Vector3d pos;
+}
+
 /**
 	* Inverse Dynamics algorithm.
 	*/
@@ -38,13 +45,13 @@ public:
 	/// @param mb MultiBody associated with this algorithm.
 	InverseStatics(const MultiBody& mb);
 
-        /**
-                * Compute the inverse statics.
-                * @param mb MultiBody used has model.
-                * @param mbc Uses force, parentToSon, bodyPosW, motionSubspace
+  /**
+    * Compute the inverse statics.
+    * @param mb MultiBody used has model.
+    * @param mbc Uses force, parentToSon, bodyPosW, motionSubspace
     * and gravity.
-                * Fills bodyAccB and jointTorque.
-                */
+    * Fills bodyAccB and jointTorque.
+    */
         void inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc);
 
   /**
@@ -60,7 +67,7 @@ public:
     * and gravity.
 		* Fills jointTorqueJacQ and jointTorqueJacF.
 		*/
-	void computeTorqueJacobian(const MultiBody& mb, MultiBodyConfig& mbc);
+	void computeTorqueJacobianJoint(const MultiBody& mb, MultiBodyConfig& mbc);
 
 	/**
     * NOTE: THIS CANNOT WORK PROPERLY. If a body is equipped with a force defined on a frame attached to a body,
@@ -91,13 +98,22 @@ public:
 		*/
 	const std::vector<sva::ForceVecd>& f() const{return f_;};
 
+  const std::vector<std::vector<Eigen::VectorXd>>& jointTorqueDiff() const
+  {
+    return jointTorqueDiff_;
+  };
+
+  /// @brief Vector with all the individual forces applied on each body
+  std::vector<std::vector<ForceWithApplicationPoint>> allForces_;
+
 private:
 	/// @brief Internal forces.
 	/// f_ is the vector of forces transmitted from body λ(i) to body i across
 	/// joint i.
 	std::vector<sva::ForceVecd> f_;
-        std::vector<Eigen::MatrixXd> df_;
-        std::vector<std::vector<Eigen::VectorXd>> jointTorqueDiff_;
+  std::vector<Eigen::MatrixXd> df_;
+  std::vector<std::vector<Eigen::VectorXd>> jointTorqueDiff_;
+
 };
 
 } // namespace rbd

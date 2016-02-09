@@ -32,7 +32,7 @@
 namespace rbd
 {
 InverseStatics::InverseStatics(const MultiBody& mb)
-    : f_(mb.nrBodies()), df_(mb.nrBodies()), jointTorqueDiff_(mb.nrJoints())
+    : allForces_(mb.nrBodies()), f_(mb.nrBodies()), df_(mb.nrBodies()), jointTorqueDiff_(mb.nrJoints())
 {
   for (size_t i = 0; i < static_cast<size_t>(mb.nrBodies()); ++i)
   {
@@ -65,7 +65,7 @@ void InverseStatics::inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)
             mbc.bodyPosW[i].dualMul(mbc.force[i]);
   }
 
-  for (int i = static_cast<int>(bodies.size()) - 1; i >= 0; --i)
+  for (int i = static_cast<int>(joints.size()); i >= 0; --i)
   {
     for (int j = 0; j < joints[i].dof(); ++j)
     {
@@ -80,7 +80,7 @@ void InverseStatics::inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)
   }
 }
 
-void InverseStatics::computeTorqueJacobian(const MultiBody& mb,
+void InverseStatics::computeTorqueJacobianJoint(const MultiBody& mb,
                                            MultiBodyConfig& mbc)
 {
   const std::vector<Body>& bodies = mb.bodies();
