@@ -71,10 +71,9 @@ public:
 	};
 
 public:
-	Joint()
-	{}
+  Joint();
 
-	/**
+        /**
 		* Compatibility constructor
 		* @param type Joint type.
 		* @param forward Joint is in forward direction if true.
@@ -262,9 +261,12 @@ inline std::ostream& operator<<(std::ostream& out, const Joint& b)
 	return out;
 }
 
+inline Joint::Joint() : dir_(0.0), params_(0), dof_(0), id_(0), name_("") {}
 
 inline Joint::Joint(OldType type, bool forward, int id, std::string name):
 	dir_(forward ? 1. : -1),
+  params_(0),
+  dof_(0),
 	id_(id),
 	name_(name)
 {
@@ -300,6 +302,8 @@ inline Joint::Joint(OldType type, bool forward, int id, std::string name):
 inline Joint::Joint(Type type, const Eigen::Vector3d& axis,
 	bool forward, int id, std::string name):
 	dir_(forward ? 1. : -1),
+  params_(0),
+  dof_(0),
 	id_(id),
 	name_(name)
 {
@@ -309,6 +313,8 @@ inline Joint::Joint(Type type, const Eigen::Vector3d& axis,
 
 inline Joint::Joint(Type type,	bool forward, int id, std::string name):
 	dir_(forward ? 1. : -1),
+  params_(0),
+  dof_(0),
 	id_(id),
 	name_(name)
 {

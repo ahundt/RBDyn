@@ -31,8 +31,8 @@ struct ForceWithApplicationPoint
 {
   public:
     sva::ForceVecd force;
-    Eigen::Vector3d pos;
-}
+    sva::PTransformd transf;
+};
 
 /**
 	* Inverse Dynamics algorithm.
@@ -52,7 +52,7 @@ public:
     * and gravity.
     * Fills bodyAccB and jointTorque.
     */
-        void inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc);
+    void inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc);
 
   /**
     * NOTE: THIS CANNOT WORK PROPERLY. If a body is equipped with a force defined on a frame attached to a body,
@@ -67,9 +67,10 @@ public:
     * and gravity.
 		* Fills jointTorqueJacQ and jointTorqueJacF.
 		*/
-	void computeTorqueJacobianJoint(const MultiBody& mb, MultiBodyConfig& mbc);
+    void computeTorqueJacobianJoint(const MultiBody& mb, MultiBodyConfig& mbc,
+                                    const std::vector<Eigen::MatrixXd>& jacMomentsAndForces);
 
-	/**
+        /**
     * NOTE: THIS CANNOT WORK PROPERLY. If a body is equipped with a force defined on a frame attached to a body,
     * that force won't follow the body during the FD computation
 		* Compute the derivatives of the torques calculated by the inverse statics
@@ -103,8 +104,11 @@ public:
     return jointTorqueDiff_;
   };
 
-  /// @brief Vector with all the individual forces applied on each body
-  std::vector<std::vector<ForceWithApplicationPoint>> allForces_;
+  std::vector<std::vector<ForceWithApplicationPoint>>& allForces()
+  {
+    return allForces_;
+  };
+
 
 private:
 	/// @brief Internal forces.
@@ -113,6 +117,9 @@ private:
 	std::vector<sva::ForceVecd> f_;
   std::vector<Eigen::MatrixXd> df_;
   std::vector<std::vector<Eigen::VectorXd>> jointTorqueDiff_;
+
+  /// @brief Vector with all the individual forces applied on each body
+  std::vector<std::vector<ForceWithApplicationPoint>> allForces_;
 
 };
 
