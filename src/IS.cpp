@@ -34,8 +34,7 @@ namespace rbd
 InverseStatics::InverseStatics(const MultiBody& mb)
     : f_(mb.nrBodies()),
       df_(mb.nrBodies()),
-      jointTorqueDiff_(mb.nrJoints()),
-      allForces_(mb.nrBodies())
+      jointTorqueDiff_(mb.nrJoints())
 {
   for (size_t i = 0; i < static_cast<size_t>(mb.nrBodies()); ++i)
   {
@@ -86,6 +85,7 @@ void InverseStatics::computeTorqueJacobianJoint(
     const MultiBody& mb, MultiBodyConfig& mbc,
     const std::vector<Eigen::MatrixXd>& jacMomentsAndForces)
 {
+  assert(jacMomentsAndForces.size() == static_cast<size_t> (mb.nrBodies()));
   const std::vector<Body>& bodies = mb.bodies();
   const std::vector<int>& pred = mb.predecessors();
   const std::vector<Joint>& joints = mb.joints();
@@ -131,7 +131,11 @@ void InverseStatics::computeTorqueJacobianJoint(
 
     df_[i] = M * fullJac;
 
-    df_[i] += mbc.bodyPosW[i].dualMatrix()*jacMomentsAndForces[i];
+    if(jacMomentsAndForces[i].cols() > 0)
+    {
+      std::cout << "Compute diff with jac forces and moments for body "<<i<< std::endl;
+      df_[i] += mbc.bodyPosW[i].dualMatrix()*jacMomentsAndForces[i];
+    }
   }
 
   for (int i = static_cast<int>(joints.size()) - 1; i >= 0; --i)
@@ -168,6 +172,16 @@ void InverseStatics::computeTorqueJacobianJoint(
       }
     }
   }
+}
+
+void InverseStatics::computeTorqueJacobianJoint(
+    const MultiBody& mb, MultiBodyConfig& mbc)
+{
+  std::vector<Eigen::MatrixXd> jacMandF;
+  for (int i = 0; i < mb.nrJoints(); ++i)
+    jacMandF.push_back(Eigen::MatrixXd(0,0));
+
+  computeTorqueJacobianJoint(mb, mbc, jacMandF);
 }
 
 void printMBC(const MultiBody& mb, const MultiBodyConfig& mbc)

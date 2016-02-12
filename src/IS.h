@@ -27,13 +27,6 @@ namespace rbd
 class MultiBody;
 struct MultiBodyConfig;
 
-struct ForceWithApplicationPoint
-{
-  public:
-    sva::ForceVecd force;
-    sva::PTransformd transf;
-};
-
 /**
 	* Inverse Dynamics algorithm.
 	*/
@@ -55,35 +48,23 @@ public:
     void inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc);
 
   /**
-    * NOTE: THIS CANNOT WORK PROPERLY. If a body is equipped with a force defined on a frame attached to a body,
-    * that force won't follow the body during the FD computation
 		* Compute the derivatives of the torques calculated by the inverse statics
     * w.r.t. q and forces
     * WARNING: This computes the derivative of the torques w.r.t some fictitious forces applied on each body at the point (0,0,0) of the reference frame.
-		* Compute the derivatives of the torques calculated by the inverse statics
-    * w.r.t. q and forces.
 		* @param mb MultiBody used has model.
 		* @param mbc Uses force, parentToSon, bodyPosW, parentToSon, motionSubspace
     * and gravity.
+    * @param jacMomentsAndForces vector of jacobian of external forces on each body. It is assumed to be computed by the user. It is the jacobian of the equivalent force transported at the zero of the robot. Note that those matrix should be empty if zero to avoid unnecessary calculations.
 		* Fills jointTorqueJacQ and jointTorqueJacF.
 		*/
     void computeTorqueJacobianJoint(const MultiBody& mb, MultiBodyConfig& mbc,
                                     const std::vector<Eigen::MatrixXd>& jacMomentsAndForces);
 
-        /**
-    * NOTE: THIS CANNOT WORK PROPERLY. If a body is equipped with a force defined on a frame attached to a body,
-    * that force won't follow the body during the FD computation
-		* Compute the derivatives of the torques calculated by the inverse statics
-    * w.r.t. q and forces using Finite Differences.
-    * WARNING: This computes the derivative of the torques w.r.t some fictitious forces applied on each body at the point (0,0,0) of the reference frame.
-		* @param mb MultiBody used has model.
-		* @param mbc Uses force, parentToSon, bodyPosW, parentToSon, motionSubspace
-    * and gravity.
-		* Fills jointTorqueJacQ and jointTorqueJacF.
+  /**
+   * Default version of computeTorqeuJacobienJoint
+   * The external forces are assumed constant w.r.t q
 		*/
-	//void computeTorqueJacobianFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
-	//void computeTorqueJacobianJointFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
-	//void computeTorqueJacobianForceFD(const MultiBody& mb, const MultiBodyConfig& mbc, double delta = 1e-8);
+    void computeTorqueJacobianJoint(const MultiBody& mb, MultiBodyConfig& mbc);
 
 	// safe version for python binding
 
@@ -104,12 +85,6 @@ public:
     return jointTorqueDiff_;
   };
 
-  std::vector<std::vector<ForceWithApplicationPoint>>& allForces()
-  {
-    return allForces_;
-  };
-
-
 private:
 	/// @brief Internal forces.
 	/// f_ is the vector of forces transmitted from body λ(i) to body i across
@@ -117,10 +92,6 @@ private:
 	std::vector<sva::ForceVecd> f_;
   std::vector<Eigen::MatrixXd> df_;
   std::vector<std::vector<Eigen::VectorXd>> jointTorqueDiff_;
-
-  /// @brief Vector with all the individual forces applied on each body
-  std::vector<std::vector<ForceWithApplicationPoint>> allForces_;
-
 };
 
 } // namespace rbd
