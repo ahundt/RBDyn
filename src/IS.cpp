@@ -37,17 +37,14 @@ InverseStatics::InverseStatics(const MultiBody& mb)
       jointTorqueDiff_(mb.nrJoints())
 {
   for (size_t i = 0; i < static_cast<size_t>(mb.nrBodies()); ++i)
-  {
     df_[i] = Eigen::MatrixXd::Zero(6, mb.nrDof());
-  }
+
   for (size_t i = 0; i < static_cast<size_t>(mb.nrJoints()); ++i)
   {
     jointTorqueDiff_[i].resize(mb.joint(static_cast<int>(i)).dof());
     for (int j = 0; j < mb.joint(static_cast<int>(i)).dof(); ++j)
-    {
       jointTorqueDiff_[i][static_cast<size_t>(j)] =
           Eigen::VectorXd::Zero(mb.nrDof());
-    }
   }
 }
 
@@ -69,15 +66,11 @@ void InverseStatics::inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)
   for (int i = static_cast<int>(joints.size()) - 1; i >= 0; --i)
   {
     for (int j = 0; j < joints[i].dof(); ++j)
-    {
       mbc.jointTorque[i][j] =
           mbc.motionSubspace[i].col(j).transpose() * f_[i].vector();
-    }
 
     if (pred[i] != -1)
-    {
       f_[pred[i]] = f_[pred[i]] + mbc.parentToSon[i].transMul(f_[i]);
-    }
   }
 }
 
@@ -93,10 +86,12 @@ void InverseStatics::computeTorqueJacobianJoint(
   sva::MotionVecd a_0(Eigen::Vector3d::Zero(), mbc.gravity);
 
   Eigen::Matrix<double, 6, 6> M;
+  Eigen::Matrix<double, 6, 6> N;
 
   for (std::size_t i = 0; i < bodies.size(); ++i)
   {
     M.setZero();
+    N.setZero();
     Jacobian jacW(mb, static_cast<int>(i));
     const Eigen::MatrixXd& jac = jacW.jacobian(mb, mbc);
     Eigen::MatrixXd fullJac = Eigen::MatrixXd::Zero(6, mb.nrDof());
@@ -109,42 +104,45 @@ void InverseStatics::computeTorqueJacobianJoint(
     Eigen::Matrix3d mRtW =
         -mbc.bodyPosW[i].rotation() *
         Eigen::vector3ToCrossMatrix(mbc.bodyPosW[i].translation());
+    Eigen::Vector3d tW = mbc.bodyPosW[i].translation();
     Eigen::Vector3d fC = mbc.force[i].couple();
     Eigen::Vector3d fF = mbc.force[i].force();
-    Eigen::Matrix3d hatFC, hatFF, hatAF, hatmRtWfF;
+    Eigen::Vector3d aC = a_0.angular();
+    Eigen::Vector3d aF = a_0.linear();
+    Eigen::Matrix3d hatFC, hatFF, hatAF, hatAC, hatmRtWfF, hathattaC, hathattfF;
     Eigen::Vector3d mRtWfF = mRtW * fF;
     hatFF = Eigen::vector3ToCrossMatrix(fF);
     hatFC = Eigen::vector3ToCrossMatrix(fC);
     hatmRtWfF = Eigen::vector3ToCrossMatrix(mRtWfF);
-    hatAF = Eigen::vector3ToCrossMatrix(a_0.linear());
+    hatAF = Eigen::vector3ToCrossMatrix(aF);
+    hatAC = Eigen::vector3ToCrossMatrix(aC);
+    Eigen::Vector3d hattWaC = Eigen::vector3ToCrossMatrix(tW)*aC;
+    Eigen::Vector3d hattWfF = Eigen::vector3ToCrossMatrix(tW)*fF;
+    hathattaC = Eigen::vector3ToCrossMatrix(hattWaC);
+    hathattfF = Eigen::vector3ToCrossMatrix(hattWfF);
 
     f_[i] = bodies[i].inertia() * mbc.bodyAccB[i] -
             mbc.bodyPosW[i].dualMul(mbc.force[i]);
 
-    M.block(0, 0, 3, 3) =
-        bodies[i].inertia().matrix().block(0, 3, 3, 3) * RW * hatAF;
-    M.block(3, 0, 3, 3) =
-        bodies[i].inertia().matrix().block(3, 3, 3, 3) * RW * hatAF;
-    M.block(0, 0, 3, 3) -= RW * hatFC + hatmRtWfF;
-    M.block(3, 0, 3, 3) -= RW * hatFF;
-    M.block(0, 3, 3, 3) -= RW * hatFF;
+    M.block(0, 0, 3, 3) = RW * hatAC;
+    M.block(3, 0, 3, 3) = - RW * hathattaC + RW * hatAF;
+    M.block(3, 3, 3, 3) = RW * hatAC;
 
-    df_[i] = M * fullJac;
+    N.block(0, 0, 3, 3) = RW * (hatFC - hathattfF);
+    N.block(0, 3, 3, 3) = RW * hatFF;
+    N.block(3, 0, 3, 3) = RW * hatFF;
+
+    df_[i] = (bodies[i].inertia().matrix() * M - N) * fullJac;
 
     if(jacMomentsAndForces[i].cols() > 0)
-    {
-      std::cout << "Compute diff with jac forces and moments for body "<<i<< std::endl;
       df_[i] += mbc.bodyPosW[i].dualMatrix()*jacMomentsAndForces[i];
-    }
   }
 
   for (int i = static_cast<int>(joints.size()) - 1; i >= 0; --i)
   {
     for (int j = 0; j < joints[i].dof(); ++j)
-    {
       jointTorqueDiff_[i][j] =
           mbc.motionSubspace[i].col(j).transpose() * df_[i];
-    }
 
     if (pred[i] != -1)
     {
