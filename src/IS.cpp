@@ -92,7 +92,7 @@ void InverseStatics::computeTorqueJacobianJoint(
   {
     M.setZero();
     N.setZero();
-    Jacobian jacW(mb, static_cast<int>(i));
+    Jacobian jacW(mb, static_cast<int>(bodies[i].id()));
     const Eigen::MatrixXd& jac = jacW.jacobian(mb, mbc);
     Eigen::MatrixXd fullJac = Eigen::MatrixXd::Zero(6, mb.nrDof());
     // Complete the previously computed jacobian to a full jacobian
@@ -101,10 +101,8 @@ void InverseStatics::computeTorqueJacobianJoint(
     mbc.bodyAccB[i] = mbc.bodyPosW[i] * a_0;
 
     Eigen::Matrix3d RW = mbc.bodyPosW[i].rotation();
-    Eigen::Matrix3d mRtW =
-        -mbc.bodyPosW[i].rotation() *
-        Eigen::vector3ToCrossMatrix(mbc.bodyPosW[i].translation());
     Eigen::Vector3d tW = mbc.bodyPosW[i].translation();
+    Eigen::Matrix3d mRtW = -RW * Eigen::vector3ToCrossMatrix(tW);
     Eigen::Vector3d fC = mbc.force[i].couple();
     Eigen::Vector3d fF = mbc.force[i].force();
     Eigen::Vector3d aC = a_0.angular();
@@ -159,14 +157,22 @@ void InverseStatics::computeTorqueJacobianJoint(
       {
         Eigen::Vector3d omega = mbc.motionSubspace[i].col(j).head(3);
         Eigen::Vector3d v = mbc.motionSubspace[i].col(j).tail(3);
-        Eigen::Matrix3d R = mbc.parentToSon[i].rotation();
-        Eigen::Vector3d t = mbc.parentToSon[i].translation();
+        Eigen::Matrix3d R = mbc.jointConfig[i].rotation();
+        Eigen::Vector3d t = mbc.jointConfig[i].translation();
         Eigen::VectorXd res(6);
         res.head(3) = -omega.cross(R.transpose() * f_[i].couple());
         res.head(3) += v.cross(R.transpose() * f_[i].force());
         res.head(3) -= t.cross(omega.cross(R.transpose() * f_[i].force()));
         res.tail(3) = -omega.cross(R.transpose() * f_[i].force());
-        df_[pred[i]].col(mb.jointPosInDof(i) + j) -= res;
+        Eigen::Matrix<double,6,6> transXt;
+        auto& Xt = mb.transforms()[i];
+        Eigen::Matrix3d hatT;
+        hatT = Eigen::vector3ToCrossMatrix(Xt.translation());
+        transXt.setZero();
+        transXt.block(0,0,3,3) = Xt.rotation().transpose();
+        transXt.block(0,3,3,3) = hatT*Xt.rotation().transpose();
+        transXt.block(3,3,3,3) = Xt.rotation().transpose();
+        df_[pred[i]].col(mb.jointPosInDof(i) + j) -= transXt*res;
       }
     }
   }
