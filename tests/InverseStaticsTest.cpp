@@ -54,6 +54,7 @@ void test(boost::shared_ptr<boost::test_tools::output_test_stream> output,
 {
   Eigen::MatrixXd jacQ(3,3);
   Eigen::MatrixXd jacF(3,24);
+  std::vector<Eigen::MatrixXd> jacMomentAndForces(4);
   (*output) << "\n\n\nChange config to " << q.transpose() << std::endl;
   mbc.q[1][0] = q(0);
   mbc.q[2][0] = q(1);
@@ -61,12 +62,14 @@ void test(boost::shared_ptr<boost::test_tools::output_test_stream> output,
   forwardKinematics(mb, mbc);
   forwardVelocity(mb, mbc);
   IS.inverseStatics(mb, mbc);
+  IS.computeTorqueJacobianJoint(mb, mbc, jacMomentAndForces);
 
   (*output) << "========================================" << std::endl;
   (*output) << "Results for mbc.q =" << mbc.q << std::endl;
   (*output) << "mbc.jointTorque =\n" << mbc.jointTorque << std::endl;
   for (auto e : IS.f())
     (*output) << "IS.f().vector =\n" << e.vector() << std::endl;
+  (*output) << "IS.jointTorqueDiff =\n" << IS.jointTorqueDiff() << std::endl;
 }
 
 BOOST_AUTO_TEST_CASE(XXXArmTorqueJacobian)

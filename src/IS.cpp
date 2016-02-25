@@ -153,6 +153,7 @@ void InverseStatics::computeTorqueJacobianJoint(
     N.block(0, 3, 3, 3) = RW * hatFF;
     N.block(3, 0, 3, 3) = RW * hatFF;
 
+    //TODO Some calculation can be avoided by using the not full jacobian here, and getting the full df_ after.
     df_[i] = (bodies[i].inertia().matrix() * M - N) * fullJac_;
 
     if (jacMomentsAndForces[i].cols() > 0)
