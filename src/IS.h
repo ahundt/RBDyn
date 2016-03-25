@@ -39,6 +39,9 @@ class InverseStatics
   /// @param mb MultiBody associated with this algorithm.
   InverseStatics(const MultiBody& mb);
 
+  void setJacobianSize(const MultiBody& mb, const MultiBodyConfig& mbc,
+                       const std::vector<Eigen::MatrixXd>& jacMomentsAndForces);
+
   /**
     * Compute the inverse statics.
     * @param mb MultiBody used has model.
@@ -102,6 +105,7 @@ class InverseStatics
   std::vector<Eigen::MatrixXd> jointTorqueDiff_;
   std::vector<Jacobian> jacW_;
   Eigen::MatrixXd fullJac_;
+  bool jacobianSizeHasBeenSet_;
 };
 
 }  // namespace rbd

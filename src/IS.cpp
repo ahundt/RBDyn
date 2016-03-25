@@ -40,7 +40,8 @@ InverseStatics::InverseStatics(const MultiBody& mb)
       df_(mb.nrBodies()),
       jointTorqueDiff_(mb.nrJoints()),
       jacW_(mb.nrBodies()),
-      fullJac_(6, mb.nrDof())
+      fullJac_(6, mb.nrDof()),
+      jacobianSizeHasBeenSet_(false)
 {
   fullJac_.setZero();
   for (size_t i = 0; i < static_cast<size_t>(mb.nrBodies()); ++i)
@@ -54,6 +55,29 @@ InverseStatics::InverseStatics(const MultiBody& mb)
     jointTorqueDiff_[i].resize(mb.joint(static_cast<int>(i)).dof(), mb.nrDof());
     jointTorqueDiff_[i].setZero();
   }
+}
+
+void InverseStatics::setJacobianSize(
+    const MultiBody& mb,
+    const MultiBodyConfig& mbc,
+    const std::vector<Eigen::MatrixXd>& jacMomentsAndForces)
+{
+  const std::vector<Body>& bodies = mb.bodies();
+
+  size_t nColsWanted = 0;
+  for (std::size_t i = 0; i < bodies.size(); ++i)
+  {
+    if (jacMomentsAndForces[i].cols() > nColsWanted)
+      nColsWanted = jacMomentsAndForces[i].cols();
+  }
+  for (std::size_t i = 0; i < bodies.size(); ++i)
+  {
+    df_[i].resize(6,nColsWanted);
+    df_[i].setZero();
+    jointTorqueDiff_[i].resize(mbc.motionSubspace[i].cols(), df_[i].cols());
+    jointTorqueDiff_[i].setZero();
+  }
+  jacobianSizeHasBeenSet_ = true;
 }
 
 void InverseStatics::inverseStatics(const MultiBody& mb, MultiBodyConfig& mbc)
@@ -105,6 +129,10 @@ void InverseStatics::computeTorqueJacobianJoint(
     const std::vector<MatrixXd>& jacMomentsAndForces)
 {
   assert(jacMomentsAndForces.size() == static_cast<size_t>(mb.nrBodies()));
+
+  if(!jacobianSizeHasBeenSet_)
+    setJacobianSize(mb, mbc, jacMomentsAndForces);
+
   const std::vector<Body>& bodies = mb.bodies();
   const std::vector<int>& pred = mb.predecessors();
   const std::vector<Joint>& joints = mb.joints();
@@ -120,20 +148,9 @@ void InverseStatics::computeTorqueJacobianJoint(
   hatAF = vector3ToCrossMatrix(aF);
   hatAC = vector3ToCrossMatrix(aC);
 
-  size_t nColsWanted = 0;
   for (std::size_t i = 0; i < bodies.size(); ++i)
   {
-    if (jacMomentsAndForces[i].cols() > nColsWanted)
-      nColsWanted = jacMomentsAndForces[i].cols();
-  }
-  for (std::size_t i = 0; i < bodies.size(); ++i)
-  {
-    df_[i].resize(6,nColsWanted);
     df_[i].setZero();
-  }
-
-  for (std::size_t i = 0; i < bodies.size(); ++i)
-  {
     M.setZero();
     N.setZero();
     // Complete the previously computed jacobian to a full jacobian
@@ -165,11 +182,6 @@ void InverseStatics::computeTorqueJacobianJoint(
     N.block(0, 3, 3, 3) = RW * hatFF;
     N.block(3, 0, 3, 3) = RW * hatFF;
 
-    //TODO Some calculation can be avoided by using the not full jacobian here, and getting the full df_ after.
-    //if (jacMomentsAndForces[i].cols() > 0)
-    //{
-      //df_[i].resize(6,jacMomentsAndForces[i].cols());
-    //}
     df_[i].block(0,0,fullJac_.rows(), fullJac_.cols()) = (bodies[i].inertia().matrix() * M - N) * fullJac_;
 
     if (jacMomentsAndForces[i].cols() > 0)
@@ -181,7 +193,6 @@ void InverseStatics::computeTorqueJacobianJoint(
 
   for (int i = static_cast<int>(joints.size()) - 1; i >= 0; --i)
   {
-    jointTorqueDiff_[i].resize(mbc.motionSubspace[i].cols(), df_[i].cols());
     jointTorqueDiff_[i] = mbc.motionSubspace[i].transpose() * df_[i];
 
     if (pred[i] != -1)
