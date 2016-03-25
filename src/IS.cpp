@@ -120,6 +120,18 @@ void InverseStatics::computeTorqueJacobianJoint(
   hatAF = vector3ToCrossMatrix(aF);
   hatAC = vector3ToCrossMatrix(aC);
 
+  size_t nColsWanted = 0;
+  for (std::size_t i = 0; i < bodies.size(); ++i)
+  {
+    if (jacMomentsAndForces[i].cols() > nColsWanted)
+      nColsWanted = jacMomentsAndForces[i].cols();
+  }
+  for (std::size_t i = 0; i < bodies.size(); ++i)
+  {
+    df_[i].resize(6,nColsWanted);
+    df_[i].setZero();
+  }
+
   for (std::size_t i = 0; i < bodies.size(); ++i)
   {
     M.setZero();
@@ -154,14 +166,22 @@ void InverseStatics::computeTorqueJacobianJoint(
     N.block(3, 0, 3, 3) = RW * hatFF;
 
     //TODO Some calculation can be avoided by using the not full jacobian here, and getting the full df_ after.
-    df_[i] = (bodies[i].inertia().matrix() * M - N) * fullJac_;
+    //if (jacMomentsAndForces[i].cols() > 0)
+    //{
+      //df_[i].resize(6,jacMomentsAndForces[i].cols());
+    //}
+    df_[i].block(0,0,fullJac_.rows(), fullJac_.cols()) = (bodies[i].inertia().matrix() * M - N) * fullJac_;
 
     if (jacMomentsAndForces[i].cols() > 0)
+    {
       df_[i] += mbc.bodyPosW[i].dualMatrix() * jacMomentsAndForces[i];
+    }
+
   }
 
   for (int i = static_cast<int>(joints.size()) - 1; i >= 0; --i)
   {
+    jointTorqueDiff_[i].resize(mbc.motionSubspace[i].cols(), df_[i].cols());
     jointTorqueDiff_[i] = mbc.motionSubspace[i].transpose() * df_[i];
 
     if (pred[i] != -1)
