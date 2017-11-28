@@ -76,6 +76,12 @@ public:
 		return H_;
 	}
 
+	/// @return The inertia matrix H time derivative H_dot
+	const Eigen::MatrixXd& H_dot() const
+	{
+		return H_dot_;
+	}
+
 	/// @return The non linear effect vector (coriolis, gravity, external force).
 	const Eigen::VectorXd& C() const
 	{
@@ -107,11 +113,15 @@ public:
 
 private:
 	Eigen::MatrixXd H_;
+	Eigen::MatrixXd H_dot_; /// H_dot
 	Eigen::VectorXd C_;
 
 	// H computation
 	std::vector<sva::RBInertiad> I_st_;
+	std::vector<Eigen::Matrix<double, 6, 6>> I_st_dot_; /// H_dot
+	std::vector<Eigen::Matrix<double, 6, 6>> X_p_c_dot_; /// H_dot: Parent to Child transform derivatives
 	std::vector<Eigen::Matrix<double, 6, Eigen::Dynamic>> F_;
+	std::vector<Eigen::Matrix<double, 6, Eigen::Dynamic>> F_dot_; /// H_dot
 
 	// C computation
 	std::vector<sva::MotionVecd> acc_;

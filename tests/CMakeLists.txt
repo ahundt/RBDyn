@@ -70,6 +70,7 @@ addUnitTest("MomentumTest")
 addUnitTest("IDIMTest")
 addUnitTest("InverseStaticsTest")
 addUnitTest("IntegrationTest")
+addUnitTest("computeH_dot_test")
 
 addBenchmark("JacobianBench")
 addBenchmark("DynamicsBench")
