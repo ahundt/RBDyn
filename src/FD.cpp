@@ -123,10 +123,12 @@ void ForwardDynamics::computeH(const MultiBody& mb, const MultiBodyConfig& mbc)
 			
 			for(int dof = 0; dof < joints[i].dof(); ++dof)
 			{
-				F_[i].col(dof) = X_p_j.transMul(sva::ForceVecd(F_[i].col(dof))).vector();
+				
 
 				F_dot_[i].col(dof) = X_p_j.matrix().transpose()*F_dot_[i].col(dof) +
 										X_p_c_dot_[j].transpose()*sva::ForceVecd(F_[i].col(dof)).vector(); /// H_dot
+
+				F_[i].col(dof) = X_p_j.transMul(sva::ForceVecd(F_[i].col(dof))).vector();
 
 			}
 			j = pred[j];

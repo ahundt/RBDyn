@@ -1,4 +1,4 @@
-#include "XXXarm.h"
+#include "XYZarm.h"
 
 #include <RBDyn/FD.h>
 #include <RBDyn/FK.h>
@@ -14,7 +14,7 @@ int main()
   rbd::MultiBodyConfig mbc;
   rbd::MultiBodyGraph mbg;
 
-  std::tie(mb, mbc, mbg) = makeXXXarm();
+  std::tie(mb, mbc, mbg) = makeXYZarm();
 
   Eigen::VectorXd q = Eigen::VectorXd::Random(mb.nrParams());
   mbc.q = rbd::vectorToParam(mb, q);
