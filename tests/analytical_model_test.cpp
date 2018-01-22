@@ -36,6 +36,7 @@ makeArm(std::string urdf_file)
       mb = res.mb;
       mbc = res.mbc;
       mbg = res.mbg;
+      mbc.gravity = Eigen::Vector3d(0., 0., 9.81);
     }
     return std::make_tuple(mb, mbc, mbg);
 }
@@ -77,12 +78,13 @@ int main()
   // Coriolis matrix
   coriolis::Coriolis coriolis(mb);
   Eigen::MatrixXd C = coriolis.coriolis(mb, mbc);
+
   std::cout << "C:" << std::endl;
   std::cout << C << std::endl;
   std::cout << "" << std::endl;
 
   std::cout << "C+C^T:" << std::endl;
-  std::cout << C+C.transpose() << std::endl;
+  std::cout << C + C.transpose() << std::endl;
   std::cout << "" << std::endl;
 
   std::cout << "C*alpha:" << std::endl;
