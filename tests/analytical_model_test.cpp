@@ -18,6 +18,8 @@
 
 #include <math.h>
 
+static std::string source_dir = CMAKE_SOURCE_DIR;
+
 /// @return multibody from URDF
 std::tuple<rbd::MultiBody, rbd::MultiBodyConfig, rbd::MultiBodyGraph>
 makeArm(std::string urdf_file)
@@ -35,8 +37,12 @@ makeArm(std::string urdf_file)
       mc_rbdyn_urdf::URDFParserResult res = mc_rbdyn_urdf::rbdyn_from_urdf(urdf.str(), true, filteredLinks, true, "base_link");
       mb = res.mb;
       mbc = res.mbc;
-      mbg = res.mbg;
       mbc.gravity = Eigen::Vector3d(0., 0., 9.81);
+      mbg = res.mbg;
+    }
+    else
+    {
+      std::cerr << "Failed to open model " << urdf_file << std::endl;
     }
     return std::make_tuple(mb, mbc, mbg);
 }
@@ -48,7 +54,7 @@ int main()
   rbd::MultiBodyConfig mbc;
   rbd::MultiBodyGraph mbg;
 
-  std::string urdf_file = "../../models/3_link_robot.urdf";
+  std::string urdf_file = source_dir + "/models/3_link_robot.urdf";
   std::tie(mb, mbc, mbg) = makeArm(urdf_file);
   
   Eigen::Vector3d q;
@@ -78,13 +84,12 @@ int main()
   // Coriolis matrix
   coriolis::Coriolis coriolis(mb);
   Eigen::MatrixXd C = coriolis.coriolis(mb, mbc);
-
   std::cout << "C:" << std::endl;
   std::cout << C << std::endl;
   std::cout << "" << std::endl;
 
   std::cout << "C+C^T:" << std::endl;
-  std::cout << C + C.transpose() << std::endl;
+  std::cout << C+C.transpose() << std::endl;
   std::cout << "" << std::endl;
 
   std::cout << "C*alpha:" << std::endl;
