@@ -95,12 +95,12 @@ int main()
   std::string urdf_file = source_dir + "/models/pepper.urdf";
   std::tie(mb, mbc, mbg) = makeArm(urdf_file);
   
-  std::string input_log_file_name = "mc-control-PepperMove-latest_LEFT_MOVING_NO_CONTACT.txt";
+  std::string input_log_file_name = "PepperMove_fromlimit2limit_with_contacts.txt";
   std::string log_file = source_dir + "/logs/"+input_log_file_name;
   std::ifstream log_file_strm (log_file);
 
   std::ofstream output_log_file;
-  std::string output_log_file_path = source_dir + "/logs/output_logs/td_"+input_log_file_name;
+  std::string output_log_file_path = source_dir + "/logs/output_logs/TD_"+input_log_file_name;
   output_log_file.open(output_log_file_path); 
 
    // start reading log file
@@ -155,7 +155,7 @@ int main()
 			fd.computeH(mb, mbc);
 			fd.computeC(mb, mbc);
 
-			Eigen::VectorXd tau_d = fd.H() + fd.C();
+			Eigen::VectorXd tau_d = fd.H()*ddq + fd.C();
 
 			//std::cout << tau_d.transpose() << std::endl;
 
