@@ -88,6 +88,8 @@ makeArm(std::string urdf_file)
 
 int main()
 {
+  bool closed_loop = false;	
+
   rbd::MultiBody mb;
   rbd::MultiBodyConfig mbc;
   rbd::MultiBodyGraph mbg;
@@ -95,7 +97,7 @@ int main()
   std::string urdf_file = source_dir + "/models/pepper.urdf";
   std::tie(mb, mbc, mbg) = makeArm(urdf_file);
   
-  std::string input_log_file_name = "PepperMove_fromlimit2limit_with_contacts.txt";
+  std::string input_log_file_name = "PepperMove_setpoints_with_contacts.txt";
   std::string log_file = source_dir + "/logs/"+input_log_file_name;
   std::ifstream log_file_strm (log_file);
 
@@ -120,13 +122,23 @@ int main()
     			std::string substr;
 			    getline( ss, substr, ';' );
 			    double subnum = std::stod(substr);
-			    if(cnt>2 && cnt<20){
-			    	ddq_vec.push_back(subnum);
-			    }else if(cnt>=20 && cnt<36){
-			    	dq_vec.push_back(subnum);
-			    }else if(cnt>=63 && cnt<80){
-			    	q_vec.push_back(subnum);
-			    }
+			    if(closed_loop){
+				    if(cnt>=20 && cnt<=36){
+				    	ddq_vec.push_back(subnum);
+				    }else if(cnt>=37 && cnt<=53){
+				    	dq_vec.push_back(subnum);
+				    }else if(cnt>=81 && cnt<=97){
+				    	q_vec.push_back(subnum);
+				    }
+				}else{
+					if(cnt>=3 && cnt<=19){
+				    	ddq_vec.push_back(subnum);
+				    }else if(cnt>=20 && cnt<=36){
+				    	dq_vec.push_back(subnum);
+				    }else if(cnt>=64 && cnt<=80){
+				    	q_vec.push_back(subnum);
+				    }
+				}
 			    cnt++;
     		}
 
