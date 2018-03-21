@@ -97,7 +97,7 @@ int main()
   std::string urdf_file = source_dir + "/models/pepper.urdf";
   std::tie(mb, mbc, mbg) = makeArm(urdf_file);
   
-  std::string input_log_file_name = "PepperMove_setpoints_with_contacts.txt";
+  std::string input_log_file_name = "mc-control-PepperMove-closed-loop-contacts-Joints.txt";
   std::string log_file = source_dir + "/logs/"+input_log_file_name;
   std::ifstream log_file_strm (log_file);
 
@@ -183,6 +183,42 @@ int main()
 			
 
     	}else{
+    		std::stringstream ss(log_line);
+    		int cnt = 0;
+    		std::vector<std::string> q_svec;
+			std::vector<std::string> dq_svec;
+			std::vector<std::string> ddq_svec;
+    		// Get line content as vector of double
+    		while(ss.good()){
+    			std::string substr;
+			    getline( ss, substr, ';' );
+			    if(closed_loop){
+				    if(cnt>=20 && cnt<=36){
+				    	ddq_svec.push_back(substr);
+				    }else if(cnt>=37 && cnt<=53){
+				    	dq_svec.push_back(substr);
+				    }else if(cnt>=81 && cnt<=97){
+				    	q_svec.push_back(substr);
+				    }
+				}else{
+					if(cnt>=3 && cnt<=19){
+				    	ddq_svec.push_back(substr);
+				    }else if(cnt>=20 && cnt<=36){
+				    	dq_svec.push_back(substr);
+				    }else if(cnt>=64 && cnt<=80){
+				    	q_svec.push_back(substr);
+				    }
+				}
+			    cnt++;
+    		}
+
+    		for (unsigned int i = 0; i < q_svec.size(); ++i){std::cout << q_svec[i] << " ";}
+    		std::cout << " " << std::endl;
+    		for (unsigned int i = 0; i < dq_svec.size(); ++i){std::cout << dq_svec[i] << " ";}
+    		std::cout << " " << std::endl;
+    		for (unsigned int i = 0; i < ddq_svec.size(); ++i){std::cout << ddq_svec[i] << " ";}
+    		std::cout << " " << std::endl;
+
     		// write header
     		output_log_file << log_line << ";";
     		for (int i = 0; i < mb.nrDof(); ++i)
