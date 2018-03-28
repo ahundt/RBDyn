@@ -1,4 +1,4 @@
-# Copyright 2012-2016 CNRS-UM LIRMM, CNRS-AIST JRL
+# Copyright 2012-2017 CNRS-UM LIRMM, CNRS-AIST JRL
 #
 # This file is part of RBDyn.
 #
@@ -33,9 +33,9 @@ macro(addUnitTest name)
     add_executable(${name} ${name}.cpp ${HEADERS})
     if(MSVC)
       # for msvc, we let boost auto-link do the work
-	    target_link_libraries(${name} PUBLIC RBDyn)
+	    target_link_libraries(${name} PUBLIC RBDyn mc_rbdyn_urdf Coriolis)
     else(MSVC)
-      target_link_libraries(${name} PUBLIC ${Boost_LIBRARIES} RBDyn)
+      target_link_libraries(${name} PUBLIC ${Boost_LIBRARIES} RBDyn mc_rbdyn_urdf Coriolis)
     endif(MSVC)
     PKG_CONFIG_USE_DEPENDENCY(${name} SpaceVecAlg)
     add_test(${name}Unit ${name})
@@ -69,13 +69,12 @@ addUnitTest("CoMTest")
 addUnitTest("MomentumTest")
 addUnitTest("IDIMTest")
 addUnitTest("InverseStaticsTest")
+addUnitTest("IntegrationTest")
+addUnitTest("computeH_dot_test")
+addUnitTest("analytical_model_test")
+target_compile_definitions(analytical_model_test PRIVATE -DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+addUnitTest("compute_desired_torque")
+target_compile_definitions(compute_desired_torque PRIVATE -DCMAKE_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 addBenchmark("JacobianBench")
 addBenchmark("DynamicsBench")
-
-if(${PYTHON_BINDING})
-  set(PYTHON_TEST_COMMAND "${PYTHON_EXECUTABLE}")
-  configure_file(rbd_pickle_test.py ${CMAKE_CURRENT_BINARY_DIR}/rbd_pickle_test.py)
-  add_test(rbdPickleTestUnit ${PYTHON_TEST_COMMAND}
-    "${CMAKE_CURRENT_BINARY_DIR}/rbd_pickle_test.py")
-endif()
